@@ -201,12 +201,8 @@ export default function(PDFJS) {
 			}
 
 			var userScale = (zoom || 100) / 100;
-
-			console.log('scale before', scale);
-			console.log('zoom', userScale);
 			scale = scale * userScale;
-			console.log('scale after', scale);
-
+			
 			var viewport = pdfPage.getViewport({ scale, rotation: rotate });
 
 			emitEvent('page-size', viewport.width, viewport.height);
