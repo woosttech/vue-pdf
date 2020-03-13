@@ -10,12 +10,12 @@ export default function(pdfjsWrapper) {
 		render: function(h) {
 			return h('span', {
 				attrs: {
-					style: 'position: relative; display: block'
+					style: 'display: block;'
 				}
 			}, [
 				h('canvas', {
 					attrs: {
-						style: 'display: inline-block; width: 100%; height: 100%; vertical-align: top',
+						style: 'display: block; margin: auto;',
 					},
 					ref:'canvas'
 				}),
@@ -46,34 +46,35 @@ export default function(pdfjsWrapper) {
 			rotate: {
 				type: Number,
 			},
+			zoom: {
+				type: Number,
+				default: 100,
+			},
 		},
 		watch: {
 			src: function() {
-
 				this.pdf.loadDocument(this.src);
 			},
 			page: function() {
-
 				this.pdf.loadPage(this.page, this.rotate);
 			},
 			rotate: function() {
-				this.pdf.renderPage(this.rotate);
+				this.pdf.renderPage(this.rotate, this.zoom);
 			},
+			zoom: function() {
+				this.pdf.renderPage(this.rotate, this.zoom);
+			}
 		},
 		methods: {
 			resize: function(size) {
-
 				// check if the element is attached to the dom tree || resizeSensor being destroyed
 				if ( this.$el.parentNode === null || (size.width === 0 && size.height === 0) )
 					return;
 
 				// on IE10- canvas height must be set
-				this.$refs.canvas.style.height = this.$refs.canvas.offsetWidth * (this.$refs.canvas.height / this.$refs.canvas.width) + 'px';
+				// this.$refs.canvas.style.height = this.$refs.canvas.offsetWidth * (this.$refs.canvas.height / this.$refs.canvas.width) + 'px';
 				// update the page when the resolution is too poor
-				var resolutionScale = this.pdf.getResolutionScale();
-
-				if ( resolutionScale < 0.85 || resolutionScale > 1.15 )
-					this.pdf.renderPage(this.rotate);
+					this.pdf.renderPage(this.rotate, this.zoom);
 
 				// this.$refs.annotationLayer.style.transform = 'scale('+resolutionScale+')';
 			},
@@ -95,7 +96,23 @@ export default function(pdfjsWrapper) {
 
 			this.$on('page-size', function(width, height) {
 
-				this.$refs.canvas.style.height = this.$refs.canvas.offsetWidth * (height / width) + 'px';
+				// reset
+				this.$refs.canvas.style.height = '100%';
+				this.$refs.canvas.style.width = '100%';
+
+				var canvasFactor = this.$refs.canvas.offsetWidth / this.$refs.canvas.offsetHeight;
+				var pageFactor = width / height;
+				
+				var factor;
+				if (canvasFactor > pageFactor) {
+					factor = this.$refs.canvas.offsetHeight / height;
+				} else {
+					factor = this.$refs.canvas.offsetWidth / width;
+				}
+				factor *= (this.zoom || 100) / 100;
+
+				this.$refs.canvas.style.height = height * factor + 'px';
+				this.$refs.canvas.style.width = width * factor + 'px';
 			});
 
 			this.pdf.loadDocument(this.src);

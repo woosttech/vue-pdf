@@ -68,11 +68,6 @@ export default function(PDFJS) {
 			pdfDoc = null;
 		}
 
-		this.getResolutionScale = function() {
-
-			return canvasElt.offsetWidth / canvasElt.width;
-		}
-
 		this.printPage = function(dpi, pageNumberOnly) {
 
 			if ( pdfPage === null )
@@ -183,7 +178,7 @@ export default function(PDFJS) {
 			})
 		}
 
-		this.renderPage = function(rotate) {
+		this.renderPage = function(rotate, zoom) {
 			if ( pdfRender !== null ) {
 
 				if ( canceling )
@@ -198,8 +193,21 @@ export default function(PDFJS) {
 
 			rotate = (pdfPage.rotate === undefined ? 0 : pdfPage.rotate) + (rotate === undefined ? 0 : rotate);
 
-			var scale = canvasElt.offsetWidth / pdfPage.getViewport({ scale: 1 }).width * (window.devicePixelRatio || 1);
-			var viewport = pdfPage.getViewport({ scale, rotation:rotate });
+			var scale;
+			if (canvasElt.offsetWidth < canvasElt.offsetHeight) {
+				scale = canvasElt.offsetHeight / pdfPage.getViewport({ scale: 1 }).height * (window.devicePixelRatio || 1);
+			} else {
+				scale = canvasElt.offsetWidth / pdfPage.getViewport({ scale: 1 }).width * (window.devicePixelRatio || 1);
+			}
+
+			var userScale = (zoom || 100) / 100;
+
+			console.log('scale before', scale);
+			console.log('zoom', userScale);
+			scale = scale * userScale;
+			console.log('scale after', scale);
+
+			var viewport = pdfPage.getViewport({ scale, rotation: rotate });
 
 			emitEvent('page-size', viewport.width, viewport.height);
 
